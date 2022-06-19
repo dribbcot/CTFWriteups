@@ -16,6 +16,7 @@ What is the root flag?
 
 
 From here, privesc.
+
 curl linpeas from a spun up http server via python
 run it, youl see the user john is in the lxd group
 
@@ -23,13 +24,18 @@ git clone https://github.com/saghul/lxd-alpine-builder/
 
 this is a script to build alpine linux images 
 mark as exectuable and run it to build image
+
 it will build a large alpine.something.something.tar.gz file
+
 use your spun up python server to pull that over to the victim machine
 copy and paste this script from https://www.exploit-db.com/exploits/46978
+
 this will exploit alpine so we can privesc
 mark as exectuable
+
 run ./script.sh name.of.large.gz.file
 this will give you root privilegees
+
 looking at the script, you can see this gives you root access to /mnt/root
 so from here, you can cd to /mnt/root/root
 and grab the flag!
