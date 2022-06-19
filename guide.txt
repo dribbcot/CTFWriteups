@@ -1,0 +1,37 @@
+What is the user flag?
+a5c2ff8b9c2e3d4fe9d4ff2f1a5a6e7e
+
+Rustcan/Nmap scan tells us port 80 and 22 are open
+enumerate with gobuster and nikto to find a /secret directory
+wget or copy and paste the rsa key here.
+run ssh2john <filenameofrsakey> > hashforjohn.txt
+run john hashforjohn.txt --wordlist path/to/word/list 
+with RSA key password, run: ssh -i <filenameofrsakey> user@IP
+use password letmein to ssh in successfully
+cat out the user flag
+
+
+What is the root flag?
+2e337b8c9f3aff0c2b3e8d4e6a7c88fc
+
+
+From here, privesc.
+curl linpeas from a spun up http server via python
+run it, youl see the user john is in the lxd group
+
+git clone https://github.com/saghul/lxd-alpine-builder/
+
+this is a script to build alpine linux images 
+mark as exectuable and run it to build image
+it will build a large alpine.something.something.tar.gz file
+use your spun up python server to pull that over to the victim machine
+copy and paste this script from https://www.exploit-db.com/exploits/46978
+this will exploit alpine so we can privesc
+mark as exectuable
+run ./script.sh name.of.large.gz.file
+this will give you root privilegees
+looking at the script, you can see this gives you root access to /mnt/root
+so from here, you can cd to /mnt/root/root
+and grab the flag!
+
+	 
