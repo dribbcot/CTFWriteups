@@ -1,0 +1,37 @@
+port scan:
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-06-26 23:33 EDT
+Nmap scan report for 10.10.205.142
+Host is up (0.080s latency).
+Not shown: 999 closed tcp ports (conn-refused)
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))
+|_http-title: Welcome to FUEL CMS
+| http-robots.txt: 1 disallowed entry 
+|_/fuel/
+|_http-server-header: Apache/2.4.18 (Ubuntu)
+
+I browsed to 10.10.205.142 and found a Fuel CMS getting started page
+
+Scrolling down, you find a login page and some credentials to try out (admin/admin)
+
+This allows us to login to Fuel as admin
+
+Not much here, but we know if we do some research, that the this version if Fuel is dated (version 1.4)
+
+I looked for a Fuel CMS 1.4 RCE exploit and found this to get us a reverse shell:
+https://github.com/AssassinUKG/fuleCMS
+
+Very simple to use, just run it with python3, type in 'shell_me' after you spawn the initial session, and you will be able
+to catch a shell via netcat
+
+Running linpeas, I saw it was vulnerable to a pkexec exploit, so tried a few different things, but no luck
+
+Running linpeas again, I saw a password 'mememe':
+	So I ran: su root
+	and entered the password
+
+	And got root!
+
+
+
+
