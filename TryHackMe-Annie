@@ -1,0 +1,38 @@
+#This box was about exploiting AnyDesk, a remote desktop application, and eventually, setcap, which sets the capabilities of each specified filename to the
+capabilities specified#
+
+
+
+
+nmap shows that 22 and 7070 are open
+7070 is running anydesk.
+
+If we google for an anydesk exploit, we find https://www.exploit-db.com/exploits/49613
+
+We can learn more about this from https://devel0pment.de/?p=1881
+
+This takes advantage of a format string vulnerability, which can be used to gain RCE
+by sending a single UDP packet to the target machine
+
+
+
+As you can see from the .py script, we use port UDP 50001. This is because it is used
+to announce anydesk clients within a local network.
+
+Use the msfvenom one liner with your specific IP and listening port to create the shellload payload
+The IP variable in the beginning of the script is the target IP
+
+This took me a while to get working and had to reboot the THM machine multiple times
+
+Finally, after I got a shell, got the user flag and found an rsa key in annie's home folder
+
+The RSA key itself needed a password when trying to login, so I used ssh2john to decode it (annie123)
+
+Using this, I was able to ssh in as annie!
+
+Running linpeas, I saw that setcap was something we could potentially exploit so I ran:
+setcap cap_dac_override=ep /bin/cat
+
+This allows us to read any file as annie, so I read the /etc/shadow file and got the hash
+
+I used the password to sudo -l as annie, and then sudo -i to become root!
